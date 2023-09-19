@@ -57,7 +57,7 @@ Catch {
 }
 
 # Make sure CSV contains proper column
-if (-not "SerialNumber" -in ($ImportedData[0].psobject.Properties).name) {
+if ("SerialNumber" -notin ($ImportedData[0].psobject.Properties).name) {
     Write-Host "CSV does not contain column SerialNumber" -ForegroundColor Red
     Exit
 }
