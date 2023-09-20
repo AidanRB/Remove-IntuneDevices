@@ -8,7 +8,7 @@ Instructions for setup:
 - Download and extract the attached file
 
 Instructions for use:
-- Prepare a CSV file with a column named SerialNumber
+- Prepare a CSV file with a column named `SerialNumber`
 - Right click `Remove-IntuneDevices.ps1`
 - Click Run with PowerShell
 - Follow the prompts
