@@ -4,7 +4,10 @@ Param (
     [string] $CSVPath,
 
     [Parameter(HelpMessage = "Also remove devices from Autopilot and Azure AD (True or False)")]
-    [switch] $AutopilotAAD
+    [switch] $AutopilotAAD,
+
+    [Parameter(HelpMessage = "Interactive mode (True or False)")]
+    [switch] $Interactive
 )
 
 # Function to get path of a CSV file using a graphical file picker
@@ -27,7 +30,7 @@ function Get-CsvPath {
 
 # Open file picker if path is not specified
 Add-Type -AssemblyName System.Windows.Forms
-if (-Not $CSVPath) {
+if (-Not $CSVPath -and -Not $Interactive) {
     $AutopilotAAD = $false
     $CSVPath = Get-CsvPath -Title "CSV to remove from Intune (or Cancel for Autopilot/AAD removal). Must have SerialNumber column."
 
@@ -38,22 +41,42 @@ if (-Not $CSVPath) {
 }
 
 # Import CSV
-Try {
-    $ImportedData = Import-Csv $CSVPath
+if (-Not $Interactive) {
+    Try {
+        $ImportedData = Import-Csv $CSVPath
 
-    # Output type of removal
-    Write-Host "Import succesful. Devices will be removed from " -NoNewline
-    if ($AutopilotAAD) {
-        Write-Host "Intune, Autopilot, and Azure AD" -ForegroundColor Cyan -NoNewline
+        # Output type of removal
+        Write-Host "Import succesful. Devices will be removed from " -NoNewline
+        if ($AutopilotAAD) {
+            Write-Host "Intune, Autopilot, and Azure AD" -ForegroundColor Cyan -NoNewline
+        }
+        Else {
+            Write-Host "Intune" -ForegroundColor Cyan -NoNewline
+        }
+        Write-Host "."
     }
-    Else {
-        Write-Host "Intune" -ForegroundColor Cyan -NoNewline
+    Catch {
+        Write-Host "Error importing CSV" -ForegroundColor Red
+        $Interactive = $true
     }
-    Write-Host "."
 }
-Catch {
-    Write-Host "Error importing CSV" -ForegroundColor Red
-    Exit
+
+# Get serial numbers from user interactively
+if ($Interactive) {
+    # Interactive mode
+    Write-Host "Interactive mode. Enter serial numbers to remove from Intune. Enter a blank line when finished."
+    $ImportedData = @()
+    $SerialNumber = "-"
+
+    # Get serial numbers until user enters blank line
+    while ($SerialNumber -ne "") {
+        $SerialNumber = Read-Host "Enter serial number"
+        if ($SerialNumber -ne "") {
+            $ImportedData += [PSCustomObject]@{
+                SerialNumber = $SerialNumber
+            }
+        }
+    }
 }
 
 # Make sure CSV contains proper column
@@ -63,7 +86,12 @@ if ("SerialNumber" -notin ($ImportedData[0].psobject.Properties).name) {
 }
 
 # Set logging path and output to terminal
-$LogPath = $(Split-Path $(Resolve-Path $CSVPath)) + "\Log_" + $(Get-Date -Format "yyyy-MM-dd_hh-mm-ss") + ".csv"
+try {
+    $LogPath = $(Split-Path $(Resolve-Path $CSVPath)) + "\Log_" + $(Get-Date -Format "yyyy-MM-dd_hh-mm-ss") + ".csv"
+}
+catch {
+    $LogPath = $PSScriptRoot + "\Log_" + $(Get-Date -Format "yyyy-MM-dd_hh-mm-ss") + ".csv"
+}
 Write-Host "Results will be logged to " -NoNewline
 Write-Host $LogPath -ForegroundColor Cyan
 
