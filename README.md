@@ -5,7 +5,7 @@ Instructions for setup:
 - Authenticate as admin
 - Paste in: `Set-ExecutionPolicy Unrestricted ; Install-Module Microsoft.Graph ; Install-Module Microsoft.Graph.Intune`
 - Close the PowerShell window
-- Download and extract the attached file
+- Download [Remove-IntuneDevices.ps1](https://github.com/AidanRB/Remove-IntuneDevices/blob/main/Remove-IntuneDevices.ps1)
 
 Instructions for use:
 - Prepare a CSV file with a column named `SerialNumber`
